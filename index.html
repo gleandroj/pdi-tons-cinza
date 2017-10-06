@@ -1,0 +1,56 @@
+<html>
+
+<head>
+	<title>PDI</title>
+	<link rel="stylesheet" href="dependencias/bootstrap.min.css" >
+
+	<style>
+		body,
+		html {
+			width: 100%;
+			height: 100%;
+			overflow-x: hidden;
+		}
+	</style>
+</head>
+
+<body>
+	<!--<div class="row justify-content-md-center" style="margin-bottom: 50px">
+		<h1>PDI - Processamento de Imagens</h1>
+	</div>-->
+	<div class="container">
+		<div class="row" style="margin-top: 30px;">
+			<input type="file" id="imagemInput" class="custom-file-input" accept="image/*">
+			<label for="imagemInput" type="button" class="btn btn-secondary">Selecionar Imagem...</label>
+		</div>
+
+		<div class="row justify-content-md-center" style="margin-bottom: 30px;">
+			<div class="col">
+				<canvas id="niveisCinzaChart"></canvas>
+			</div>
+			<div class="col">
+				<canvas id="quantizacaoCinzaChart"></canvas>
+			</div>
+		</div>
+
+		<div class="row ">
+			<div class="col bg-primary border ">
+				<strong>Imagem Lida:</strong><br/>
+				<canvas id="canvasPreviewFull"></canvas>
+			</div>
+			<div class="col bg-primary border" >
+				<strong>Linha processada:</strong><br/>
+				<canvas id="canvasPreviewSmall" ></canvas>
+			</div>
+		</div>
+	</div>
+
+
+	<script src="dependencias/jquery-3.2.1.slim.min.js"></script>
+	<script src="dependencias/popper.min.js"></script>
+	<script src="dependencias/bootstrap.min.js"></script>
+	<script src="dependencias/Chart.js"></script>
+	<script src="processamento.js"></script>
+</body>
+
+</html>
