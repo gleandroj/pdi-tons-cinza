@@ -11,13 +11,13 @@ var canvasPreviewSmall = null;
 
 var quantizacaoLabels = ['0-32', '32-64', '62-96', '96-128', '128-163', '163-195', '195-227', '227-255'];
 
-$(document).ready(function(){
+$(document).ready(function () {
     niveisCinzaChartCtx = document.getElementById("niveisCinzaChart").getContext('2d');
     quantiazacaoCinzaChartCtx = document.getElementById("quantizacaoCinzaChart").getContext('2d');
-    
+
     canvasPreviewFull = document.getElementById('canvasPreviewFull');
     canvasPreviewFullCtx = canvasPreviewFull.getContext('2d');
-    
+
     canvasPreviewSmall = document.getElementById('canvasPreviewSmall');
     canvasPreviewSmallCtx = canvasPreviewSmall.getContext('2d');
 
@@ -29,22 +29,62 @@ $(document).ready(function(){
     quantizacaoCinzaChart = inicializarChart(quantiazacaoCinzaChartCtx, 'line', [], quantizacaoLabels, 'Quantizacao de Niveis de cinza');
 });
 
-function onImagemReadCompleted(imagemData, width, height){
+function onImagemReadCompleted(imagemData, width, height) {
     var y = height / 2;
     var smallPreviewHeight = 1; // 1px
     var result = obterNiveisDeCinzaAndPreviewDaImagem(imagemData.data, width, height, y);
     var niveis = result.niveis;
     var quantizacao = result.quantizacao;
     var preview = result.preview;
-    var labels = Array.apply(null, {length: width}).map(Number.call, Number);
-    
-    desenharImagemPreview(canvasPreviewSmallCtx, preview, width, smallPreviewHeight);
-    desenharImagemPreview(canvasPreviewFullCtx, imagemData, width, height);
-    
-    console.log(quantizacao);
+    var labels = Array.apply(null, { length: width }).map(Number.call, Number);
+    let scale = 1;
+    document.getElementById("scale").textContent = 'x'+scale;
+
+    desenharImagemPreview(canvasPreviewSmall, canvasPreviewSmallCtx, preview, width, smallPreviewHeight);
+    desenharImagemPreview(canvasPreviewFull, canvasPreviewFullCtx, imagemData, width, height);
+
+    canvasPreviewFull.addEventListener("wheel", function ($event) {
+        event.preventDefault();
+        let delta = ($event.deltaY / 100);
+        if (delta > 0) {
+            scale *= 2;
+        } else {
+            scale /= 2;
+        }
+
+        document.getElementById("scale").textContent = 'x'+scale;
+        canvasPreviewFull.height = height * scale;
+        canvasPreviewFull.width = width * scale;
+        desenharImagemPreview(canvasPreviewFull, canvasPreviewFullCtx, scaleImageData(canvasPreviewFullCtx, imagemData, scale), width * scale, height * scale);
+    });
 
     updateData(niveisCinzaChart, labels, niveis);
     updateData(quantizacaoCinzaChart, quantizacaoLabels, quantizacao);
+}
+
+function scaleImageData(c, imageData, scale) {
+    var scaled = c.createImageData(imageData.width * scale, imageData.height * scale);
+    for (var row = 0; row < imageData.height; row++) {
+        for (var col = 0; col < imageData.width; col++) {
+            var sourcePixel = [
+                imageData.data[(row * imageData.width + col) * 4 + 0],
+                imageData.data[(row * imageData.width + col) * 4 + 1],
+                imageData.data[(row * imageData.width + col) * 4 + 2],
+                imageData.data[(row * imageData.width + col) * 4 + 3]
+            ];
+            for (var y = 0; y < scale; y++) {
+                var destRow = row * scale + y;
+                for (var x = 0; x < scale; x++) {
+                    var destCol = col * scale + x;
+                    for (var i = 0; i < 4; i++) {
+                        scaled.data[(destRow * scaled.width + destCol) * 4 + i] = sourcePixel[i];
+                    }
+                }
+            }
+        }
+    }
+
+    return scaled;
 }
 
 function updateData(chart, label, data) {
@@ -54,26 +94,25 @@ function updateData(chart, label, data) {
     chart.update();
 }
 
-
-function lerImagem($event, doneCallback){
+function lerImagem($event, doneCallback) {
     var imgFile = $event.target.files[0],
-            ctx = document.createElement("CANVAS").getContext('2d'),
-            imgHtml = new Image(),
-            reader = new FileReader();
+        ctx = document.createElement("CANVAS").getContext('2d'),
+        imgHtml = new Image(),
+        reader = new FileReader();
 
-        imgHtml.onload = function () {
-            ctx.drawImage(imgHtml, 0, 0);
-            var w = imgHtml.width;
-            var h = imgHtml.height;
-            var imgData = ctx.getImageData(0, 0, w, h);
-            doneCallback(imgData, w, h);
-        };
+    imgHtml.onload = function () {
+        ctx.drawImage(imgHtml, 0, 0);
+        var w = imgHtml.width;
+        var h = imgHtml.height;
+        var imgData = ctx.getImageData(0, 0, w, h);
+        doneCallback(imgData, w, h);
+    };
 
-        reader.onloadend = function () {
-            imgHtml.src = reader.result;
-        };
+    reader.onloadend = function () {
+        imgHtml.src = reader.result;
+    };
 
-        reader.readAsDataURL(imgFile);
+    reader.readAsDataURL(imgFile);
 }
 
 function inicializarChart(ctx, type, data, labels, label) {
@@ -93,7 +132,7 @@ function inicializarChart(ctx, type, data, labels, label) {
             scales: {
                 yAxes: [{
                     ticks: {
-                        stepSize : 15,
+                        stepSize: 15,
                         suggestedMin: 0,
                         suggestedMax: 255,
                         beginAtZero: true
@@ -117,18 +156,18 @@ function inicializarChart(ctx, type, data, labels, label) {
     });
 }
 
-function fn_quantizacao(fator, dados){
-    if(fator < 32) dados[0] = dados[0] + 1;
-    if(fator >= 32 && fator < 64) dados[1] = dados[1] + 1;
-    else if(fator >= 64 && fator < 96) dados[2] = dados[2] + 1;
-    else if(fator >= 96 && fator < 128) dados[3] = dados[3] + 1;
-    else if(fator >= 128 && fator < 163) dados[4] = dados[4] + 1;
-    else if(fator >= 163 && fator < 195) dados[5] = dados[5] + 1;
-    else if(fator >= 195 && fator < 227) dados[6] = dados[6] + 1;
+function fn_quantizacao(fator, dados) {
+    if (fator < 32) dados[0] = dados[0] + 1;
+    if (fator >= 32 && fator < 64) dados[1] = dados[1] + 1;
+    else if (fator >= 64 && fator < 96) dados[2] = dados[2] + 1;
+    else if (fator >= 96 && fator < 128) dados[3] = dados[3] + 1;
+    else if (fator >= 128 && fator < 163) dados[4] = dados[4] + 1;
+    else if (fator >= 163 && fator < 195) dados[5] = dados[5] + 1;
+    else if (fator >= 195 && fator < 227) dados[6] = dados[6] + 1;
     else dados[7] = dados[7] + 1;
 }
 
-function obterNiveisDeCinzaAndPreviewDaImagem(pixels, width, height, yCoordenada){
+function obterNiveisDeCinzaAndPreviewDaImagem(pixels, width, height, yCoordenada) {
     var l = width * height;
     var m = yCoordenada;
     var niveis = [];
@@ -150,10 +189,10 @@ function obterNiveisDeCinzaAndPreviewDaImagem(pixels, width, height, yCoordenada
             var factor = 0.2126 * r + 0.7152 * g + 0.0722 * b;
             fn_quantizacao(factor, niveisQuanti);
             previewData = previewData.concat([r, g, b, a]);
-            niveis.push(factor);		
+            niveis.push(factor);
         }
     }
-    
+
     var imageData = document.createElement("CANVAS").getContext('2d').createImageData(width, 1);
     for (var i = 0; i < previewData.length; i++) imageData.data[i] = previewData[i];
 
@@ -164,7 +203,7 @@ function obterNiveisDeCinzaAndPreviewDaImagem(pixels, width, height, yCoordenada
     };
 }
 
-function desenharImagemPreview(ctx, imagemData, width, height){
-    ctx.clearRect(0, 0, canvasPreviewSmall.width, canvasPreviewSmall.height);
+function desenharImagemPreview(canvas, ctx, imagemData, width, height) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.putImageData(imagemData, 0, 0, 0, 0, width, height);
 }
