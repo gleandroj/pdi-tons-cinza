@@ -26,21 +26,37 @@
 
 		<div class="row justify-content-md-center" style="margin-bottom: 30px;">
 			<div class="col">
-				<canvas id="niveisCinzaChart"></canvas>
+				<canvas width="203px" height="102px" id="niveisCinzaChart"></canvas>
 			</div>
 			<div class="col">
-				<canvas id="quantizacaoCinzaChart"></canvas>
+				<canvas width="203px" height="102px" id="quantizacaoCinzaChart"></canvas>
+			</div>
+		</div>
+		<!--<div class="row justify-content-md-center" style="margin-bottom: 30px;">
+			<div class="col">
+				<canvas id="histogramaEqualizerChart"  width="203px" height="102px"></canvas>
+			</div>
+		</div>-->
+
+		<div class="row ">
+			<div class="col bg-primary border ">
+				<strong>Imagem Lida: <span id="scale"></span></strong><br/>
+				<canvas width="203px" height="102px" id="canvasPreviewFull"></canvas>
+			</div>
+			<div class="col bg-primary border" >
+				<strong>Linha processada:</strong><br/>
+				<canvas width="203px" height="102px" id="canvasPreviewSmall" ></canvas>
 			</div>
 		</div>
 
 		<div class="row ">
 			<div class="col bg-primary border ">
-				<strong>Imagem Lida: <span id="scale"></span></strong><br/>
-				<canvas id="canvasPreviewFull"></canvas>
+				<strong>Imagem Equalizada: <span id="scale"></span></strong><br/>
+				<canvas width="203px" height="102px" id="canvasPreviewHistogramaEqualizerFull"></canvas>
 			</div>
-			<div class="col bg-primary border" >
-				<strong>Linha processada:</strong><br/>
-				<canvas id="canvasPreviewSmall" ></canvas>
+			<div class="col bg-primary border ">
+				<strong>Resolucao de Intensidade: <span id="scale"></span></strong><br/>
+				<canvas width="203px" height="102px" id="canvasPreviewResolutionFull"></canvas>
 			</div>
 		</div>
 	</div>

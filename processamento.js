@@ -1,6 +1,5 @@
 
-var niveisCinzaChart = null, quantizacaoCinzaChart = null;
-
+var niveisCinzaChart = null, quantizacaoCinzaChart = null, histogramaEqualizerChart = null;
 var niveisCinzaChartCtx = null, quantiazacaoCinzaChartCtx = null;
 
 var canvasPreviewFullCtx = null;
@@ -9,11 +8,18 @@ var canvasPreviewSmallCtx = null;
 var canvasPreviewFull = null;
 var canvasPreviewSmall = null;
 
+var canvasPreviewHistogramaEqualizerFull = null;
+var canvasPreviewHistogramaEqualizerCtx = null;
+
+var canvasPreviewResolutionFull = null;
+var canvasPreviewResolutionFullCtx = null;
+
 var quantizacaoLabels = ['0-32', '32-64', '62-96', '96-128', '128-163', '163-195', '195-227', '227-255'];
 
 $(document).ready(function () {
     niveisCinzaChartCtx = document.getElementById("niveisCinzaChart").getContext('2d');
     quantiazacaoCinzaChartCtx = document.getElementById("quantizacaoCinzaChart").getContext('2d');
+    //histogramaEqualizerChartCtx = document.getElementById("histogramaEqualizerChart").getContext('2d');
 
     canvasPreviewFull = document.getElementById('canvasPreviewFull');
     canvasPreviewFullCtx = canvasPreviewFull.getContext('2d');
@@ -21,12 +27,19 @@ $(document).ready(function () {
     canvasPreviewSmall = document.getElementById('canvasPreviewSmall');
     canvasPreviewSmallCtx = canvasPreviewSmall.getContext('2d');
 
+    canvasPreviewResolutionFull = document.getElementById('canvasPreviewResolutionFull');
+    canvasPreviewResolutionFullCtx = canvasPreviewResolutionFull.getContext('2d');
+
+    canvasPreviewHistogramaEqualizerFull = document.getElementById('canvasPreviewHistogramaEqualizerFull');
+    canvasPreviewHistogramaEqualizerCtx = canvasPreviewHistogramaEqualizerFull.getContext('2d');
+
     $("#imagemInput").change(function ($event) {
         lerImagem($event, onImagemReadCompleted);
     });
 
-    niveisCinzaChart = inicializarChart(niveisCinzaChartCtx, 'line', [], [], 'Amostragem de Niveis de cinza');
-    quantizacaoCinzaChart = inicializarChart(quantiazacaoCinzaChartCtx, 'line', [], quantizacaoLabels, 'Quantizacao de Niveis de cinza');
+    niveisCinzaChart = inicializarChart(niveisCinzaChartCtx, 'line', [], [], 'Amostragem de Niveis de cinza', 255);
+    quantizacaoCinzaChart = inicializarChart(quantiazacaoCinzaChartCtx, 'line', [], quantizacaoLabels, 'Quantizacao de Niveis de cinza', 255);
+    //histogramaEqualizerChart = inicializarChart(histogramaEqualizerChartCtx, 'bar', [], [], 'Histograma de Equalizacao', null);
 });
 
 function onImagemReadCompleted(imagemData, width, height) {
@@ -39,9 +52,14 @@ function onImagemReadCompleted(imagemData, width, height) {
     var labels = Array.apply(null, { length: width }).map(Number.call, Number);
     let scale = 1;
     document.getElementById("scale").textContent = 'x'+scale;
-
+    
     desenharImagemPreview(canvasPreviewSmall, canvasPreviewSmallCtx, preview, width, smallPreviewHeight);
     desenharImagemPreview(canvasPreviewFull, canvasPreviewFullCtx, imagemData, width, height);
+    //reduzirNiveisDeCinza(imagemData, 3, width, height);
+    desenharImagemPreview(canvasPreviewResolutionFull, canvasPreviewResolutionFullCtx, imagemData, width, height);
+    var hist = new Float32Array(256);
+    equalizeHistogram(imagemData.data, null, hist);
+    desenharImagemPreview(canvasPreviewHistogramaEqualizerFull, canvasPreviewHistogramaEqualizerCtx, imagemData, width, height);
 
     canvasPreviewFull.addEventListener("wheel", function ($event) {
         event.preventDefault();
@@ -57,9 +75,10 @@ function onImagemReadCompleted(imagemData, width, height) {
         canvasPreviewFull.width = width * scale;
         desenharImagemPreview(canvasPreviewFull, canvasPreviewFullCtx, scaleImageData(canvasPreviewFullCtx, imagemData, scale), width * scale, height * scale);
     });
-
+    
     updateData(niveisCinzaChart, labels, niveis);
     updateData(quantizacaoCinzaChart, quantizacaoLabels, quantizacao);
+    //updateData(histogramaEqualizerChart, Array.from(hist.values()), Array.from(hist.keys()));
 }
 
 function scaleImageData(c, imageData, scale) {
@@ -97,11 +116,11 @@ function updateData(chart, label, data) {
 function lerImagem($event, doneCallback) {
     var imgFile = $event.target.files[0],
         ctx = document.createElement("CANVAS").getContext('2d'),
-        imgHtml = new Image(),
+        imgHtml = new Image(203, 102),
         reader = new FileReader();
 
     imgHtml.onload = function () {
-        ctx.drawImage(imgHtml, 0, 0);
+        ctx.drawImage(imgHtml, 0, 0, imgHtml.width, imgHtml.height);
         var w = imgHtml.width;
         var h = imgHtml.height;
         var imgData = ctx.getImageData(0, 0, w, h);
@@ -115,7 +134,7 @@ function lerImagem($event, doneCallback) {
     reader.readAsDataURL(imgFile);
 }
 
-function inicializarChart(ctx, type, data, labels, label) {
+function inicializarChart(ctx, type, data, labels, label, suggestedMax) {
     return new Chart(ctx, {
         type: type,
         data: {
@@ -134,7 +153,7 @@ function inicializarChart(ctx, type, data, labels, label) {
                     ticks: {
                         stepSize: 15,
                         suggestedMin: 0,
-                        suggestedMax: 255,
+                        suggestedMax: suggestedMax,
                         beginAtZero: true
                     },
                     scaleLabel: {
@@ -167,7 +186,8 @@ function fn_quantizacao(fator, dados) {
     else dados[7] = dados[7] + 1;
 }
 
-function obterNiveisDeCinzaAndPreviewDaImagem(pixels, width, height, yCoordenada) {
+function obterNiveisDeCinzaAndPreviewDaImagem(pixels, width, height, yCoordenada, scaleGray) {
+    if(!scaleGray) scaleGray = 1;
     var l = width * height;
     var m = yCoordenada;
     var niveis = [];
@@ -186,7 +206,7 @@ function obterNiveisDeCinzaAndPreviewDaImagem(pixels, width, height, yCoordenada
         var x = i - y * width;
 
         if (y == m) {
-            var factor = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+            var factor = (0.2126 * r + 0.7152 * g + 0.0722 * b) / scaleGray;
             fn_quantizacao(factor, niveisQuanti);
             previewData = previewData.concat([r, g, b, a]);
             niveis.push(factor);
@@ -203,7 +223,48 @@ function obterNiveisDeCinzaAndPreviewDaImagem(pixels, width, height, yCoordenada
     };
 }
 
+function reduzirNiveisDeCinza(imgData, scaleGray, width, height){
+    var l = width * height;
+    for (var i = 0; i < l; i++) {
+        // get color of pixel
+        var r = imgData.data[i * 4]; // Red
+        var g = imgData.data[i * 4 + 1]; // Green
+        var b = imgData.data[i * 4 + 2]; // Blue
+        var a = imgData.data[i * 4 + 3]; // Alpha
+        let factor = (0.2126 * r + 0.7152 * g + 0.0722 * b) / scaleGray;
+        // get color of pixel
+        imgData.data[i * 4] = factor; // Red
+        imgData.data[i * 4 + 1] = factor; // Green
+        imgData.data[i * 4 + 2] = factor; // Blue
+        //imgData.data[i * 4 + 3] = factor; // Alpha
+    }
+}
+
 function desenharImagemPreview(canvas, ctx, imagemData, width, height) {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.putImageData(imagemData, 0, 0, 0, 0, width, height);
+}
+
+function equalizeHistogram(src, dst, hist, niveis) {
+    var srcLength = src.length;
+    if (!dst) { dst = src; }
+    if(!niveis) niveis = 1;
+    // Compute histogram and histogram sum:
+    var sum = 0;
+    for (var i = 0; i < srcLength; ++i) {
+        ++hist[~~src[i]];
+        ++sum;
+    }
+
+    // Compute integral histogram:
+    var prev = hist[0];
+    for (var i = 1; i < 256; ++i) {
+        prev = hist[i] += prev;
+    }
+    // Equalize image:
+    var norm = (255 * niveis) / sum;
+    for (var i = 0; i < srcLength; ++i) {
+        dst[i] = hist[~~src[i]] * norm;
+    }
+    return dst;
 }
