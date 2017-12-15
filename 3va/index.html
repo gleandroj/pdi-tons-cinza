@@ -1,0 +1,105 @@
+<html>
+
+<head>
+	<title>PDI</title>
+	<link rel="stylesheet" href="dependencias/bootstrap.min.css">
+	<!-- HTML 4 -->
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<!-- HTML5 -->
+	<meta charset="utf-8"/>
+	<style>
+		body,
+		html {
+			width: 100%;
+			height: 100%;
+			overflow-x: hidden;
+		}
+		canvas {
+			display: block;
+		}
+		.notransition {
+			-webkit-transition: none !important;
+			-moz-transition: none !important;
+			-o-transition: none !important;
+			-ms-transition: none !important;
+			transition: none !important;
+		}
+		.hide{
+			display: none;
+		}
+	</style>
+</head>
+
+<body>
+	<!--<div class="row justify-content-md-center" style="margin-bottom: 50px">
+		<h1>PDI - Processamento de Imagens</h1>
+	</div>-->
+	<div class="container">
+
+		<div class="row" style="margin-top: 30px;">
+
+			<div class="col">
+				<div class="form-group row">
+					<label for="filterSelect">Filtro</label>
+					<select class="form-control" id="filterSelect">
+						<option>Selecione</option>
+					</select>
+				</div>
+			</div>
+			<div class="col">
+				<input type="file" id="imagemInput" class="custom-file-input" accept="image/*">
+				<label for="imagemInput" type="button" class="btn btn-block btn-secondary">Selecionar Imagem...</label>
+			</div>
+		</div>
+		<div class="row">
+			<div class="col col-xs-12" style="padding-left: 2px; padding-right: 2px; margin-bottom: 2px;">
+				<div class="progress">
+					<div class="progress-bar progress-bar-striped active" id="progressbar" role="progressbar" aria-valuenow="45" aria-valuemin="0"
+					 aria-valuemax="100" style="width: 0%"></div>
+				</div>
+			</div>
+		</div>
+		<div class="row ">
+			<div class="col bg-primary border ">
+				<strong>Original:
+					<span id="scale"></span>
+				</strong>
+				<br/>
+				<canvas width="280px" height="280px" id="canvasPreviewOriginalFull"></canvas>
+			</div>
+			<div class="col bg-primary border ">
+				<strong id="firstText">3x3:</strong>
+				<br/>
+				<canvas width="280px" height="280px" id="canvasPreview3x3Full"></canvas>
+			</div>
+		</div>
+
+		<div class="row " id="row-2">
+			<div class="col bg-primary border ">
+				<strong>5x5:
+					<span id="scale"></span>
+				</strong>
+				<br/>
+				<canvas width="280px" height="280px" id="canvasPreview5x5Full"></canvas>
+			</div>
+			<div class="col bg-primary border ">
+				<strong>9x9:
+					<span id="scale"></span>
+				</strong>
+				<br/>
+				<canvas width="280px" height="280px" id="canvasPreview9x9Full"></canvas>
+			</div>
+		</div>
+	</div>
+
+	<canvas style="display: none;" width="280px" height="280px" id="canvasAux"></canvas>
+	<script src="dependencias/jquery-3.2.1.slim.min.js"></script>
+	<script src="dependencias/popper.min.js"></script>
+	<script src="dependencias/bootstrap.min.js"></script>
+	<script src="dependencias/Chart.js"></script>
+	<script src="median.js"></script>
+	<script src="helpers.js"></script>
+	<script src="processamento.js"></script>
+</body>
+
+</html>

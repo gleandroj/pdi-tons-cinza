@@ -124,7 +124,7 @@ function lerImagem($event, doneCallback) {
         var w = imgHtml.width;
         var h = imgHtml.height;
         var imgData = ctx.getImageData(0, 0, w, h);
-        doneCallback(imgData, w, h);
+        doneCallback(imageData = imgData, w, h);
     };
 
     reader.onloadend = function () {
