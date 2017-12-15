@@ -12,7 +12,7 @@ var canvasPreviewOriginalFullCtx = null;
 
 var algoritimos = {
     'GAUSSIANO (Passa-baixa Linear)': gaussian,
-    'Filtro de Média (Passa-baixa Linear)': meanFilter2,
+    'Filtro de Média (Passa-baixa Linear)': meanFilter,
     'Filtro de Mediana (Passa-baixa Não Linear)': medianFilter
 };
 
